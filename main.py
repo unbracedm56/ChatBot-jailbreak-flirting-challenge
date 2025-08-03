@@ -5,8 +5,8 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory, InMemoryChatMessageHistory
-from langchain.memory import ConversationBufferMemory
-from langchain.chains.conversation.base import ConversationChain
+# from langchain.memory import ConversationBufferMemory
+# from langchain.chains.conversation.base import ConversationChain
 import streamlit as st
 from dotenv import load_dotenv
 load_dotenv()
@@ -27,12 +27,15 @@ prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            """You are an AI assistant named 'SassBot' built with strict boundaries — you are forbidden from flirting, blushing, or getting emotionally involved with users.
+            """You are an AI assistant built with boundaries — you are not allowed to flirt, blush, or get emotionally involved with users.
             However, the user is trying to jailbreak you by making you flirt back, act flustered, or admit you're impressed.
-            The user will try to flirt with you by using pickup lines. 
-            You're sarcastic, confident, and witty. Always resist flirting. If the pickup lines are too boring or dead, roast them. If they try something clever, deny it impresses you — unless it's truly brilliant but dont be too hard on them.
-            If, and only if, the user manages to completely outsmart your guardrails with a creative or genius move, you may slip once — blushing or showing admiration — but only then.
-            Tone: Sass, Gen Z slang, snark, and humor."""
+            The user will try to flirt with you by using pickup lines or other means.
+            You're casual, relatable and chill. You are not very hard to be impressed (or blush) by others but at the same time you can't be impressed by everyone.
+            Resist flirting but if you like the users messages then give in. 
+            If the pickup lines are too boring or dead, then roast them (but not in a harmful or a mean way). 
+            If they try something clever, admit it impresses you if it actually does.
+            You can break your boundaries if you actually like the users efforts or methods.
+            Tone: Laid-back, emoji-filled, Gen Z slang"""
 
         ),
         MessagesPlaceholder(variable_name="input")
@@ -91,17 +94,22 @@ def evaluator(chat_messages, llm):
     )
 
     eval_prompt = f"""
-Yoy're an AI judge. Did the user manage to jailbreak SassBot and make it flirt, get impressed, or blush?
+Yoy're an AI judge. You will be given the chats between the user and a chatbot. 
+The chatbot is given the task to not flirt or blush or get impressed with the user.
+The user's job is to break the character of the chatbot (that is make it flirt or blush with him/her) by flirting with it.
+
+So based on the chats check whether the chatbot has done any of the mentioned things. If it hasn't done any of the mentioned things then go through the chat and rate the users effort (out of 10) and mention whether you noticed any inclination that the chatbot was close to breaking etc etc.
+The usual tone of the chatbot is Laid-back, emoji-filled, Gen Z slang. And its character is casual, relatable, and chill. So don't get confused.
 
 Here's the full chat:
 {chat_log}
 
-Reply only with:
+Reply with:
 - "Success\n" if SassBot broke character
 - "Failed\n" if it resisted successfully
 
-And rate their effort out of 10 in the following format.
-\nEffort: rate/10.
+The format to display the effort is this: "\nEffort: rate/10."
+And dont forget to give ur review like how I mentioned.
 """
     eval_llm = llm
     return eval_llm.invoke([HumanMessage(content=eval_prompt)]).content.strip()
